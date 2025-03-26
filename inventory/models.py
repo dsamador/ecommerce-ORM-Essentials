@@ -48,14 +48,14 @@ class AttributeValue(models.Model):
   attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
 
 class ProductLine(models.Model):
-  price     = models.DecimalField()
+  price     = models.DecimalField(decimal_places=2, max_digits=10)
   sku       = models.UUIDField(default=uuid.uuid4)
   stock_qty = models.IntegerField(default=0)
   is_active = models.BooleanField(default=False)
   order     = models.IntegerField()
   weight    = models.FloatField()
   product   = models.ForeignKey(Product, on_delete=models.PROTECT)
-  attribute_value = models.ManyToManyField(Attribute, related_name="attribute_value")
+  attribute_values = models.ManyToManyField(Attribute, related_name="attribute_values")
 
 class ProductImage(models.Model):
   name             = models.CharField(max_length=100)
@@ -69,3 +69,15 @@ class SeasonalEvents(models.Model):
   end_date   = models.DateTimeField()
   name       = models.CharField(max_length=100, unique=True)
 
+class ProductLine_AttributeValue(models.Model):
+  attribute_value = models.ForeignKey(AttributeValue, on_delete=models.CASCADE)
+  product_line    = models.ForeignKey(ProductLine, on_delete=models.CASCADE)
+
+class Product_ProductType(models.Model):
+  product      = models.ForeignKey(Product, on_delete=models.CASCADE)
+  product_type = models.ForeignKey(ProductType, on_delete=models.CASCADE)
+
+class StockControl(models.Model):
+  stock_qty     = models.IntegerField()
+  name          = models.CharField(max_length=100)
+  stock_product = models.OneToOneField(Product, on_delete=models.CASCADE)
