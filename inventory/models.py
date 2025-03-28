@@ -1,16 +1,40 @@
 from django.db import models
 import uuid
+from django.utils.text import slugify
+
+#python manage.py makemigrations: Sirve para hacer el archivo que pasara a ser SQL
+#python manage.py migrate: para hacer la migracion a la base de datos
+#python manage.py showmigrations --list: para ver las migraciones listadas, las que tienen X estan hechas
+#python manage.py migrate inventory 002_xxxx: sirve para hacer rollback a una migracion especifica
+#python manage.py createsuperuser: sirve para hacer el super user
+#  
 
 # Create your models here.
 class Category(models.Model):
-  name      = models.CharField(max_length=100, unique=True)
-  slug      = models.SlugField(unique=True)
+  name      = models.CharField(max_length=100, 
+                               unique=True, 
+                               verbose_name="First Name", 
+                               help_text="Enter a category")
+  slug      = models.SlugField(unique=True, null=True, blank=True)
   is_active = models.BooleanField(default=False)
   parent = models.ForeignKey('self', on_delete=models.PROTECT)
 
+  class Meta:
+    verbose_name = "Inventory Category"
+    verbose_name_plural = "Categories"
+
+  def save(self, *args, **kwargs):
+    if not self.slug:
+      self.slug = slugify(self.name)
+      super().save(*args, **kwargs)    
+
+  def __str__(self):
+    return self.name
+  
+
 class ProductType(models.Model):
   name   = models.CharField(max_length=100)
-  parent = models.ForeignKey('self', on_delete=models.CASCADE)
+  parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
 
 class Product(models.Model):
 
@@ -36,7 +60,7 @@ class Product(models.Model):
                                  choices=STOCK_STATUS, 
                                  default=OUT_OF_STOCK)
   category       = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
-  seasonal_event = models.ForeignKey("SeasonalEvents", on_delete=models.SET_NULL, null=True)
+  seasonal_event = models.ForeignKey("SeasonalEvents", on_delete=models.SET_NULL, null=True, blank=True)
   product_type   = models.ManyToManyField(ProductType, related_name="product_type") 
 
 class Attribute(models.Model):
@@ -45,7 +69,7 @@ class Attribute(models.Model):
 
 class AttributeValue(models.Model):
   attribute_value = models.CharField(max_length=100)
-  attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE)
+  attribute = models.ForeignKey(Attribute, on_delete=models.CASCADE, null=True, blank=True)
 
 class ProductLine(models.Model):
   price     = models.DecimalField(decimal_places=2, max_digits=10)
